@@ -1,0 +1,62 @@
+pipeline:
+  name: terraform-aws-poc
+  identifier: terraform_aws_poc
+  projectIdentifier: REPLACE_PROJECT_ID
+  orgIdentifier: default
+  stages:
+    - stage:
+        name: Provision AWS Infra
+        identifier: provision_aws_infra
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  name: Terraform Plan
+                  identifier: tf_plan
+                  type: TerraformPlan
+                  timeout: 15m
+                  spec:
+                    provisionerIdentifier: aws_poc          # ties plan+apply together
+                    configuration:
+                      command: Apply
+                      configFiles:
+                        store:
+                          type: Github                       # your Git connector type
+                          spec:
+                            connectorRef: REPLACE_GIT_CONNECTOR
+                            repoName: REPLACE_REPO_NAME
+                            gitFetchType: Branch
+                            branch: main
+                            folderPath: terraform            # path to .tf files in repo
+                      secretManagerRef: harnessSecretManager # encrypts the plan file
+                      # Optional: pass variables
+                      # varFiles:
+                      #   - varFile:
+                      #       type: Inline
+                      #       spec:
+                      #         content: |
+                      #           environment = "poc"
+              - step:
+                  name: Approve Plan
+                  identifier: approve_plan
+                  type: HarnessApproval
+                  timeout: 1d
+                  spec:
+                    approvalMessage: Review the Terraform plan output before applying.
+                    includePipelineExecutionHistory: true
+                    approvers:
+                      userGroups:
+                        - account._account_all_users        # tighten this for real use
+                      minimumCount: 1
+                      disallowPipelineExecutor: false
+              - step:
+                  name: Terraform Apply
+                  identifier: tf_apply
+                  type: TerraformApply
+                  timeout: 30m
+                  spec:
+                    provisionerIdentifier: aws_poc
+                    configuration:
+                      type: InheritFromPlan                  # applies the exact reviewed plan
+        tags: {}
