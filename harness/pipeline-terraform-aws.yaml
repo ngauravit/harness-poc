@@ -1,7 +1,7 @@
 pipeline:
   name: terraform-aws-poc
   identifier: terraform_aws_poc
-  projectIdentifier: REPLACE_PROJECT_ID
+  projectIdentifier: default_project
   orgIdentifier: default
   stages:
     - stage:
@@ -24,12 +24,23 @@ pipeline:
                         store:
                           type: Github                       # your Git connector type
                           spec:
-                            connectorRef: REPLACE_GIT_CONNECTOR
-                            repoName: REPLACE_REPO_NAME
+                            connectorRef: githubharnesspoc
                             gitFetchType: Branch
                             branch: main
                             folderPath: terraform            # path to .tf files in repo
                       secretManagerRef: harnessSecretManager # encrypts the plan file
+                      # AWS credentials injected from Harness secrets.
+                      # The Apply step (InheritFromPlan) reuses these automatically.
+                      environmentVariables:
+                        - name: AWS_ACCESS_KEY_ID
+                          type: String
+                          value: <+secrets.getValue("aws_access_key_id")>
+                        - name: AWS_SECRET_ACCESS_KEY
+                          type: String
+                          value: <+secrets.getValue("aws_secret_access_key")>
+                        - name: AWS_DEFAULT_REGION
+                          type: String
+                          value: us-east-1
                       # Optional: pass variables
                       # varFiles:
                       #   - varFile:
