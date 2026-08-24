@@ -56,6 +56,7 @@ pipeline:
                               content: |-
                                 aws_region  = "<+pipeline.variables.aws_region>"
                                 environment = "<+pipeline.variables.environment>"
+                                bucket_prefix = "<+pipeline.variables.bucket_prefix>"
               - step:
                   name: Approve Plan
                   identifier: approve_plan
