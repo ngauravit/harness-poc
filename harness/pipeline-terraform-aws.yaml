@@ -3,6 +3,13 @@ pipeline:
   identifier: terraform_aws_poc
   projectIdentifier: default_project
   orgIdentifier: default
+  variables:
+    - name: aws_region
+      type: String
+      default: us-east-1
+    - name: environment
+      type: String
+      default: poc
   stages:
     - stage:
         name: Provision AWS Infra
@@ -41,13 +48,14 @@ pipeline:
                         - name: AWS_DEFAULT_REGION
                           type: String
                           value: us-east-1
-                      # Optional: pass variables
-                      # varFiles:
-                      #   - varFile:
-                      #       type: Inline
-                      #       spec:
-                      #         content: |
-                      #           environment = "poc"
+                      varFiles:
+                        - varFile:
+                            identifier: inline_vars
+                            type: Inline
+                            spec:
+                              content: |-
+                                aws_region  = "<+pipeline.variables.aws_region>"
+                                environment = "<+pipeline.variables.environment>"
               - step:
                   name: Approve Plan
                   identifier: approve_plan
